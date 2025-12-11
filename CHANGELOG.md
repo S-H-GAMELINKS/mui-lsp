@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-12
+
 ### Added
 - Insert mode LSP completion support:
   - Auto-trigger completion after `.`, `@`, and `::` characters via `InsertCompletion` autocmd
