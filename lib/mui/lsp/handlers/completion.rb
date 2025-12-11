@@ -84,8 +84,30 @@ module Mui
         end
 
         def display_completions(items)
-          # For now, show first few items in message
-          # TODO: Integrate with Mui's popup menu or completion system
+          # Use Mui's insert completion API if available
+          if @editor.respond_to?(:start_insert_completion)
+            prefix = get_current_prefix
+            @editor.start_insert_completion(items, prefix:)
+          else
+            # Fallback: show message
+            show_message_fallback(items)
+          end
+        end
+
+        def get_current_prefix
+          window = @editor.window
+          buffer = window.buffer
+          line = buffer.line(window.cursor_row)
+          col = window.cursor_col
+
+          # Find word start
+          start_col = col
+          start_col -= 1 while start_col > 0 && line[start_col - 1] =~ /\w/
+
+          line[start_col...col] || ""
+        end
+
+        def show_message_fallback(items)
           count = items.length
 
           # Build a summary message
@@ -94,13 +116,6 @@ module Mui
           summary += ", ..." if count > 3
 
           @editor.message = "#{count} completion#{"s" unless count == 1}: #{summary}"
-
-          # Store items for potential insertion
-          store_completions(items)
-        end
-
-        def store_completions(items)
-          @editor.instance_variable_set(:@lsp_completions, items)
         end
 
         def kind_to_string(kind)

@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Added
+- Insert mode LSP completion support:
+  - Auto-trigger completion after `.`, `@`, and `::` characters via `InsertCompletion` autocmd
+  - Uses `textEdit` for precise text replacement (e.g., `@user` replaces properly)
+  - `force_reopen` ensures LSP has latest buffer content before completion
+  - Completion items include `label`, `kind`, `detail`, `documentation`, and `text_edit`
+- `Ctrl+Space` keymap in Insert mode to manually trigger LSP completion
+
 ## [0.1.1] - 2025-12-11
 
 ### Changed

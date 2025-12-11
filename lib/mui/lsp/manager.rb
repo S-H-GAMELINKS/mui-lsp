@@ -162,6 +162,23 @@ module Mui
         end
       end
 
+      # Sync immediately without debounce (for completion requests)
+      def sync_now(file_path:, text:)
+        uri = TextDocumentSync.path_to_uri(file_path)
+        text_syncs_for(file_path).each do |text_sync|
+          text_sync.did_change(uri: uri, text: text, debounce: false, force: true)
+        end
+      end
+
+      # Force close and re-open document to reset LSP state
+      def force_reopen(file_path:, text:)
+        uri = TextDocumentSync.path_to_uri(file_path)
+        text_syncs_for(file_path).each do |text_sync|
+          text_sync.did_close(uri: uri) if text_sync.open?(uri)
+          text_sync.did_open(uri: uri, text: text)
+        end
+      end
+
       def did_save(file_path:, text: nil)
         uri = TextDocumentSync.path_to_uri(file_path)
         # Broadcast to all matching servers
