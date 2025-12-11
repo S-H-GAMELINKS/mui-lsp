@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.1.1] - 2025-12-11
+
 ### Changed
 
 - `Mui::Lsp::ConfigDsl` now imports configurations from `Mui::LspConfigStub`:
