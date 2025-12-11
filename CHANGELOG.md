@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+
+- `Mui::Lsp::ConfigDsl` now imports configurations from `Mui::LspConfigStub`:
+  - Allows `Mui.lsp { ... }` to be called in `.muirc` before mui-lsp gem is loaded
+  - Configurations stored in the stub are automatically migrated when the gem loads
+  - Requires Mui v0.2.0+ which provides `LspConfigStub`
+
 ## [0.1.0] - 2025-12-11
 
 ### Added

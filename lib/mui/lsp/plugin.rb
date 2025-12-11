@@ -485,26 +485,17 @@ end
 Mui.plugin_manager.register(:lsp, Mui::Lsp::Plugin)
 
 # DSL for .muirc configuration
+# This replaces Mui.lsp stub method from mui core with the real implementation
 module Mui
-  class << self
-    def lsp(&block)
-      @lsp_config ||= Lsp::ConfigDsl.new
-      @lsp_config.instance_eval(&block) if block
-      @lsp_config
-    end
-
-    def lsp_server_configs
-      @lsp_config&.server_configs || []
-    end
-  end
-
   module Lsp
     # DSL class for configuring LSP in .muirc
     class ConfigDsl
       attr_reader :server_configs
 
-      def initialize
+      def initialize(existing_configs = [])
         @server_configs = []
+        # Import configs from LspConfigStub if any were defined before gem load
+        import_stub_configs(existing_configs)
       end
 
       def use(name, sync_on_change: nil)
@@ -534,6 +525,45 @@ module Mui
           sync_on_change: sync_on_change
         )
       end
+
+      private
+
+      def import_stub_configs(configs)
+        configs.each do |cfg|
+          case cfg[:type]
+          when :preset
+            use(cfg[:name], **cfg.fetch(:options, {}))
+          when :custom
+            server(
+              name: cfg[:name],
+              command: cfg[:command],
+              language_ids: cfg[:language_ids],
+              file_patterns: cfg[:file_patterns],
+              auto_start: cfg.fetch(:auto_start, true),
+              sync_on_change: cfg.fetch(:sync_on_change, true)
+            )
+          end
+        end
+      end
+    end
+  end
+
+  class << self
+    def lsp(&block)
+      # Migrate from LspConfigStub to real ConfigDsl on first access after gem load
+      if @lsp_config.is_a?(LspConfigStub)
+        existing_configs = @lsp_config.server_configs
+        @lsp_config = Lsp::ConfigDsl.new(existing_configs)
+      end
+      @lsp_config ||= Lsp::ConfigDsl.new
+      @lsp_config.instance_eval(&block) if block
+      @lsp_config
+    end
+
+    def lsp_server_configs
+      # Ensure migration happens
+      lsp unless @lsp_config.is_a?(Lsp::ConfigDsl)
+      @lsp_config&.server_configs || []
     end
   end
 end
