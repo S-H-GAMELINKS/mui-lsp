@@ -38,9 +38,9 @@ module Mui
         )
       end
 
-      def did_change(uri:, text:, debounce: true)
-        # Skip if sync_on_change is disabled for this server
-        return unless @server_config.sync_on_change
+      def did_change(uri:, text:, debounce: true, force: false)
+        # Skip if sync_on_change is disabled for this server (unless forced)
+        return unless force || @server_config.sync_on_change
 
         @mutex.synchronize do
           return unless @open_documents.key?(uri)

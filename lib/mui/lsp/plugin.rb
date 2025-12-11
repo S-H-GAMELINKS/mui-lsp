@@ -157,6 +157,12 @@ module Mui
             false
           end
         end
+
+        # Insert mode: Ctrl+Space - Trigger LSP completion
+        keymap(:insert, "\x00") do |ctx|
+          handle_lsp_completion(ctx)
+          true
+        end
       end
 
       def register_autocmds
@@ -193,6 +199,11 @@ module Mui
           next unless file_path && !file_path.start_with?("[")
 
           get_manager(ctx.editor).did_close(file_path: file_path)
+        end
+
+        # Hook into insert completion trigger (. and @ characters)
+        autocmd(:InsertCompletion) do |ctx|
+          handle_lsp_completion(ctx)
         end
       end
 
@@ -291,9 +302,15 @@ module Mui
           return
         end
 
+        mgr = get_manager(ctx.editor)
+        text = ctx.buffer.lines.join("\n")
+
+        # Force re-open document to ensure LSP has latest content
+        mgr.force_reopen(file_path: file_path, text: text)
+
         line = ctx.window.cursor_row
         character = ctx.window.cursor_col
-        get_manager(ctx.editor).completion(file_path: file_path, line: line, character: character)
+        mgr.completion(file_path: file_path, line: line, character: character)
       end
 
       def handle_lsp_diagnostics(ctx)
