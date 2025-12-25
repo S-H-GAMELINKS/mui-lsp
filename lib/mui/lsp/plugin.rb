@@ -6,7 +6,7 @@ module Mui
   module Lsp
     # Main plugin class for mui-lsp
     # Registers commands and keymaps for LSP integration
-    class Plugin < Mui::Plugin
+    class Plugin < Mui::Plugin # rubocop:disable Metrics/ClassLength
       name "lsp"
 
       def setup
@@ -120,6 +120,38 @@ module Mui
         # Insert mode: Ctrl+Space - Trigger LSP completion
         keymap(:insert, "\x00") do |ctx|
           handle_lsp_completion(ctx)
+          true
+        end
+
+        # Picker navigation: Leader+Enter - open selected
+        keymap(:normal, "<Leader><CR>") do |ctx|
+          next unless picker_active?(ctx.editor)
+
+          handle_picker_select(ctx, new_tab: false)
+          true
+        end
+
+        # Picker navigation: Ctrl+t - open in new tab
+        keymap(:normal, "<C-t>") do |ctx|
+          next unless picker_active?(ctx.editor)
+
+          handle_picker_select(ctx, new_tab: true)
+          true
+        end
+
+        # Picker navigation: Leader+q - close picker
+        keymap(:normal, "<Leader>q") do |ctx|
+          next unless picker_active?(ctx.editor)
+
+          close_picker(ctx.editor)
+          true
+        end
+
+        # Picker navigation: Leader+Esc - close picker
+        keymap(:normal, "<Leader><Esc>") do |ctx|
+          next unless picker_active?(ctx.editor)
+
+          close_picker(ctx.editor)
           true
         end
       end
@@ -444,6 +476,70 @@ module Mui
       end
 
       private
+
+      # Picker helpers
+
+      def picker_active?(editor)
+        # Check if current buffer is the picker buffer
+        editor.buffer&.file_path == "[LSP Picker]"
+      end
+
+      def handle_picker_select(ctx, new_tab:)
+        locations = ctx.editor.instance_variable_get(:@lsp_picker_locations)
+        return unless locations
+
+        # Get selected index from cursor position (line 3+ are the items, 0-indexed)
+        cursor_row = ctx.window.cursor_row
+        index = cursor_row - 2 # Skip header lines
+        return if index.negative? || index >= locations.length
+
+        location = locations[index]
+        close_picker(ctx.editor)
+        jump_to_location(ctx, location, new_tab: new_tab)
+      end
+
+      def close_picker(editor)
+        editor.instance_variable_set(:@lsp_picker_locations, nil)
+        editor.instance_variable_set(:@lsp_picker_type, nil)
+        # Close the picker window
+        editor.window_manager.close_current_window
+      end
+
+      def jump_to_location(ctx, location, new_tab:)
+        file_path = location.file_path
+        unless file_path
+          ctx.set_message("Cannot open: #{location.uri}")
+          return
+        end
+
+        line = location.range.start.line
+        character = location.range.start.character
+
+        if new_tab
+          # Open in new tab (same as :tabnew command)
+          tab_manager = ctx.editor.tab_manager
+          new_tab_obj = tab_manager.add
+          new_buffer = Mui::Buffer.new
+          new_buffer.load(file_path)
+          new_buffer.undo_manager = Mui::UndoManager.new
+          new_tab_obj.window_manager.add_window(new_buffer)
+        else
+          # Open in current window
+          current_buffer = ctx.buffer
+          if current_buffer.file_path != file_path
+            new_buffer = Mui::Buffer.new
+            new_buffer.load(file_path)
+            ctx.editor.window.buffer = new_buffer
+          end
+        end
+
+        window = ctx.editor.window
+        window.cursor_row = line
+        window.cursor_col = character
+        window.ensure_cursor_visible
+
+        ctx.set_message("#{File.basename(file_path)}:#{line + 1}")
+      end
 
       def create_manager(editor)
         mgr = Manager.new(editor: editor)

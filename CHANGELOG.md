@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Added
+- Location picker for Definition and References:
+  - When multiple definitions or references are found, opens a scratch buffer picker
+  - `j`/`k` - Navigate up/down (native cursor movement)
+  - `\` + `Enter` - Open selected location in current window
+  - `Ctrl+t` - Open selected location in new tab
+  - `\q` / `\` + `Esc` - Close picker
+
 ### Changed
 - Keymaps changed from leader key (`\`) to `<Space>` prefix:
   - `<Space>df` - Go to definition
