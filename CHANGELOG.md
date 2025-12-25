@@ -1,6 +1,10 @@
 ## [Unreleased]
 
 ### Added
+- Format support (`textDocument/formatting`):
+  - `:LspFormat` command to format current file
+  - `<Space>ff` keymap for formatting
+  - Works with RuboCop LSP and other formatters
 - Location picker for Definition and References:
   - When multiple definitions or references are found, opens a scratch buffer picker
   - `j`/`k` - Navigate up/down (native cursor movement)
