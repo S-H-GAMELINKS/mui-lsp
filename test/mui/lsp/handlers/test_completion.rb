@@ -104,7 +104,7 @@ class TestCompletionHandler < Minitest::Test
 
   class TestHandleError < TestCompletionHandler
     def test_handle_error_shows_message
-      error = { "code" => -32600, "message" => "Invalid request" }
+      error = { "code" => -32_600, "message" => "Invalid request" }
 
       @handler.handle(nil, error)
 

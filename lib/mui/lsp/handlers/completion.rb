@@ -102,7 +102,7 @@ module Mui
 
           # Find word start
           start_col = col
-          start_col -= 1 while start_col > 0 && line[start_col - 1] =~ /\w/
+          start_col -= 1 while start_col.positive? && line[start_col - 1] =~ /\w/
 
           line[start_col...col] || ""
         end
