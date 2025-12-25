@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Changed
+- Keymaps changed from leader key (`\`) to `<Space>` prefix:
+  - `<Space>df` - Go to definition
+  - `<Space>rf` - Find references
+  - `<Space>hf` - Show hover information
+  - `<Space>cf` - Show completion
+  - `<Space>ef` - Show diagnostic at cursor
+- Removed manual `@leader_pending` state management in favor of Mui's native multi-key sequence support
+
 ## [0.2.0] - 2025-12-12
 
 ### Added

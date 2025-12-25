@@ -136,17 +136,15 @@ To manually start a server:
 
 ### Keymaps
 
-Leader key is `\` (backslash).
-
 | Key | Mode | Description |
 |-----|------|-------------|
 | `K` | Normal | Show hover information (in floating window) |
-| `\h` | Normal | Show hover information (alternative) |
-| `\d` | Normal | Go to definition |
-| `\r` | Normal | Find references |
-| `\c` | Normal | Show completion |
-| `\e` | Normal | Show diagnostic at cursor (in floating window) |
-| `Esc` | Normal | Cancel leader pending state / Close floating window |
+| `<Space>df` | Normal | Go to definition |
+| `<Space>rf` | Normal | Find references |
+| `<Space>hf` | Normal | Show hover information (alternative to K) |
+| `<Space>cf` | Normal | Show completion |
+| `<Space>ef` | Normal | Show diagnostic at cursor (in floating window) |
+| `Esc` | Normal | Close floating window |
 
 ## Architecture
 
