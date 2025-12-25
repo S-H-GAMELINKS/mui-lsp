@@ -7,7 +7,7 @@ require_relative "../test_helper"
 class TestSolargraphE2E < Minitest::Test
   FIXTURES_DIR = File.expand_path("../fixtures", __dir__)
   SAMPLE_FILE = File.join(FIXTURES_DIR, "sample.rb")
-  SAMPLE_URI = "file://#{SAMPLE_FILE}"
+  SAMPLE_URI = "file://#{SAMPLE_FILE}".freeze
 
   def setup
     skip_unless_solargraph_available
@@ -72,9 +72,9 @@ class TestSolargraphE2E < Minitest::Test
 
     assert_nil error, "Hover should not return an error"
     # Solargraph may return nil for some positions, which is valid
-    if result
-      assert result.key?("contents"), "Hover result should have contents"
-    end
+    return unless result
+
+    assert result.key?("contents"), "Hover result should have contents"
   end
 
   def test_completion_on_object
@@ -98,11 +98,11 @@ class TestSolargraphE2E < Minitest::Test
     wait_for { done }
 
     assert_nil error, "Completion should not return an error"
-    if result
-      items = result.is_a?(Hash) ? result["items"] : result
-      # Completion might return items or be empty depending on server state
-      assert items.is_a?(Array) || items.nil?
-    end
+    return unless result
+
+    items = result.is_a?(Hash) ? result["items"] : result
+    # Completion might return items or be empty depending on server state
+    assert items.is_a?(Array) || items.nil?
   end
 
   def test_definition_jump
@@ -187,7 +187,7 @@ class TestSolargraphE2E < Minitest::Test
       sleep 1.5
 
       # Check if we received any diagnostics notifications
-      diagnostic_notifications = @notifications.select do |n|
+      @notifications.select do |n|
         n[:method] == "textDocument/publishDiagnostics"
       end
 
@@ -195,7 +195,7 @@ class TestSolargraphE2E < Minitest::Test
       # The test passes if no errors occurred
       assert @client.running?
     ensure
-      File.delete(bad_file) if File.exist?(bad_file)
+      FileUtils.rm_f(bad_file)
     end
   end
 

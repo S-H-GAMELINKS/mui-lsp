@@ -7,7 +7,7 @@ require_relative "../test_helper"
 class TestRubyLspE2E < Minitest::Test
   FIXTURES_DIR = File.expand_path("../fixtures", __dir__)
   SAMPLE_FILE = File.join(FIXTURES_DIR, "sample.rb")
-  SAMPLE_URI = "file://#{SAMPLE_FILE}"
+  SAMPLE_URI = "file://#{SAMPLE_FILE}".freeze
 
   def setup
     skip_unless_ruby_lsp_available

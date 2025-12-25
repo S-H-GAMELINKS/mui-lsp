@@ -13,12 +13,12 @@ gem "minitest", "~> 5.16"
 gem "rubocop", "~> 1.21"
 
 # LSP servers for E2E testing
-gem "solargraph"
 gem "ruby-lsp"
+gem "solargraph"
 # Required for Ruby 4.0 compatibility (removed from stdlib)
+gem "benchmark"
 gem "logger"
 gem "observer"
-gem "benchmark"
 
 # Development dependency - use local path for development
 gem "mui", github: "S-H-GAMELINKS/mui"
