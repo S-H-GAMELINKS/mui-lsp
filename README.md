@@ -4,10 +4,10 @@ LSP (Language Server Protocol) plugin for [Mui](https://github.com/S-H-GAMELINKS
 
 ## Features
 
-- **Hover**: Show documentation for symbol under cursor (`K` or `\h` or `:LspHover`)
-- **Go to Definition**: Jump to symbol definition (`\d` or `:LspDefinition`)
-- **Find References**: Show all references to symbol (`\r` or `:LspReferences`)
-- **Completion**: Get code completion suggestions (`\c` or `:LspCompletion`)
+- **Hover**: Show documentation for symbol under cursor (`K` or `<Space>hf` or `:LspHover`)
+- **Go to Definition**: Jump to symbol definition (`<Space>df` or `:LspDefinition`)
+- **Find References**: Show all references to symbol (`<Space>rf` or `:LspReferences`)
+- **Completion**: Get code completion suggestions (`<Space>cf` or `:LspCompletion`)
 - **Diagnostics**: Display errors and warnings from LSP server (`:LspDiagnostics`)
 
 ## Supported Language Servers
@@ -144,7 +144,18 @@ To manually start a server:
 | `<Space>hf` | Normal | Show hover information (alternative to K) |
 | `<Space>cf` | Normal | Show completion |
 | `<Space>ef` | Normal | Show diagnostic at cursor (in floating window) |
-| `Esc` | Normal | Close floating window |
+| `Esc` | Normal | Close floating window / picker |
+
+#### Location Picker (for Definition/References with multiple candidates)
+
+When multiple definitions or references are found, a picker buffer opens. Use standard Vim navigation:
+
+| Key | Description |
+|-----|-------------|
+| `j`/`k` | Navigate up/down (native cursor movement) |
+| `\` + `Enter` | Open selected location in current window |
+| `Ctrl+t` | Open selected location in new tab |
+| `\q` / `\` + `Esc` | Close picker |
 
 ## Architecture
 

@@ -83,15 +83,22 @@ module Mui
         end
 
         def show_location_list(locations)
-          # Show a list of locations for the user to choose from
-          items = locations.map do |loc|
+          # Store locations for picker navigation
+          @editor.instance_variable_set(:@lsp_picker_locations, locations)
+          @editor.instance_variable_set(:@lsp_picker_type, :definition)
+
+          # Build picker content
+          lines = []
+          locations.each_with_index do |loc, idx|
             file_path = loc.file_path || loc.uri
-            line = loc.range.start.line + 1
-            "#{file_path}:#{line}"
+            display_path = File.basename(file_path.to_s)
+            line_num = loc.range.start.line + 1
+            lines << "#{idx + 1}. #{display_path}:#{line_num}"
           end
 
-          @editor.message = "Found #{locations.length} definitions: #{items.first}..."
-          # TODO: Integrate with quickfix list or popup menu when available
+          # Open scratch buffer for picker
+          content = "Definitions (\\Enter:open, Ctrl+t:tab, \\q:close)\n\n#{lines.join("\n")}"
+          @editor.open_scratch_buffer("[LSP Picker]", content)
         end
       end
     end
