@@ -119,6 +119,16 @@ module Mui
                 }, &callback)
       end
 
+      def formatting(uri:, tab_size: 2, insert_spaces: true, &callback)
+        request("textDocument/formatting", {
+                  textDocument: { uri: uri },
+                  options: {
+                    tabSize: tab_size,
+                    insertSpaces: insert_spaces
+                  }
+                }, &callback)
+      end
+
       def did_open(uri:, language_id:, version:, text:)
         notify("textDocument/didOpen", {
                  textDocument: {
@@ -271,6 +281,9 @@ module Mui
               linkSupport: false
             },
             references: {},
+            formatting: {
+              dynamicRegistration: false
+            },
             publishDiagnostics: {
               relatedInformation: true
             },

@@ -8,6 +8,7 @@ LSP (Language Server Protocol) plugin for [Mui](https://github.com/S-H-GAMELINKS
 - **Go to Definition**: Jump to symbol definition (`<Space>df` or `:LspDefinition`)
 - **Find References**: Show all references to symbol (`<Space>rf` or `:LspReferences`)
 - **Completion**: Get code completion suggestions (`<Space>cf` or `:LspCompletion`)
+- **Format**: Format current file with LSP server (`<Space>ff` or `:LspFormat`)
 - **Diagnostics**: Display errors and warnings from LSP server (`:LspDiagnostics`)
 
 ## Supported Language Servers
@@ -130,6 +131,7 @@ To manually start a server:
 | `:LspCompletion` | Show completion menu |
 | `:LspDiagnostics` | Show diagnostics for current file |
 | `:LspDiagnosticShow` | Show diagnostic at cursor in floating window |
+| `:LspFormat` | Format current file |
 | `:LspLog` | Show LSP server logs in a buffer |
 | `:LspDebug` | Show debug information |
 | `:LspOpen` | Manually notify LSP server about current file |
@@ -144,6 +146,7 @@ To manually start a server:
 | `<Space>hf` | Normal | Show hover information (alternative to K) |
 | `<Space>cf` | Normal | Show completion |
 | `<Space>ef` | Normal | Show diagnostic at cursor (in floating window) |
+| `<Space>ff` | Normal | Format current file |
 | `Esc` | Normal | Close floating window / picker |
 
 #### Location Picker (for Definition/References with multiple candidates)
@@ -174,6 +177,7 @@ mui-lsp/
       references.rb    # References response handler
       diagnostics.rb   # Diagnostics notification handler
       completion.rb    # Completion response handler
+      formatting.rb    # Formatting response handler
     json_rpc_io.rb     # JSON-RPC 2.0 over stdio
     request_manager.rb # Request ID and callback management
     server_config.rb   # Server configuration presets

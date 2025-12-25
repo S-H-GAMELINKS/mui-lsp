@@ -259,6 +259,21 @@ module Mui
         end
       end
 
+      def format(file_path:, tab_size: 2, insert_spaces: true)
+        client = client_for(file_path)
+        unless client
+          @editor.message = server_unavailable_message(file_path)
+          return
+        end
+
+        uri = TextDocumentSync.path_to_uri(file_path)
+        handler = Handlers::Formatting.new(editor: @editor, client: client)
+
+        client.formatting(uri: uri, tab_size: tab_size, insert_spaces: insert_spaces) do |result, error|
+          handler.handle(result, error)
+        end
+      end
+
       def running_servers
         @mutex.synchronize do
           @clients.select { |_, client| client.running? }.keys

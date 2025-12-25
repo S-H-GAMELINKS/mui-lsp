@@ -78,6 +78,11 @@ module Mui
         command(:LspOpen) do |ctx, _args|
           handle_lsp_open(ctx)
         end
+
+        # :LspFormat - Format current file
+        command(:LspFormat) do |ctx, _args|
+          handle_lsp_format(ctx)
+        end
       end
 
       def register_keymaps
@@ -114,6 +119,12 @@ module Mui
         # <Space>ef - Show diagnostic at cursor
         keymap(:normal, "<Space>ef") do |ctx|
           handle_lsp_diagnostic_show(ctx)
+          true
+        end
+
+        # <Space>ff - Format current file
+        keymap(:normal, "<Space>ff") do |ctx|
+          handle_lsp_format(ctx)
           true
         end
 
@@ -445,6 +456,22 @@ module Mui
 
         mgr.did_open(file_path: file_path, text: text)
         ctx.set_message("LSP: opened #{File.basename(file_path)}")
+      end
+
+      def handle_lsp_format(ctx)
+        file_path = ctx.buffer.file_path
+        unless file_path
+          ctx.set_message("LSP: no file path")
+          return
+        end
+
+        mgr = get_manager(ctx.editor)
+        text = ctx.buffer.lines.join("\n")
+
+        # Sync document before formatting
+        mgr.sync_now(file_path: file_path, text: text)
+
+        mgr.format(file_path: file_path)
       end
 
       public
