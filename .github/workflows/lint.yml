@@ -1,4 +1,4 @@
-name: Ruby
+name: Lint
 
 on:
   push:
@@ -8,13 +8,17 @@ on:
   pull_request:
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
+    name: RuboCop
     strategy:
+      fail-fast: false
       matrix:
         ruby:
-          - '4.0.0'
+          - '3.2'
+          - '3.3'
+          - '3.4'
+          - head
 
     steps:
       - uses: actions/checkout@v4
@@ -25,5 +29,5 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Run the default task
-        run: bundle exec rake
+      - name: Run RuboCop
+        run: bundle exec rubocop
