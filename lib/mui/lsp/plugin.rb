@@ -87,75 +87,34 @@ module Mui
           true
         end
 
-        # Leader key (\) - start pending mode
-        keymap(:normal, "\\") do |_ctx|
-          @leader_pending = true
+        # <Space>df - Go to definition
+        keymap(:normal, "<Space>df") do |ctx|
+          handle_lsp_definition(ctx)
           true
         end
 
-        # \d - Go to definition
-        keymap(:normal, "d") do |ctx|
-          if @leader_pending
-            @leader_pending = false
-            handle_lsp_definition(ctx)
-            true
-          else
-            false # Let default 'd' handle it
-          end
+        # <Space>rf - Find references
+        keymap(:normal, "<Space>rf") do |ctx|
+          handle_lsp_references(ctx)
+          true
         end
 
-        # \r - Go to references
-        keymap(:normal, "r") do |ctx|
-          if @leader_pending
-            @leader_pending = false
-            handle_lsp_references(ctx)
-            true
-          else
-            false # Let default 'r' handle it
-          end
+        # <Space>hf - Show hover (alternative to K)
+        keymap(:normal, "<Space>hf") do |ctx|
+          handle_lsp_hover(ctx)
+          true
         end
 
-        # \h - Show hover (alternative to K)
-        keymap(:normal, "h") do |ctx|
-          if @leader_pending
-            @leader_pending = false
-            handle_lsp_hover(ctx)
-            true
-          else
-            false # Let default 'h' handle it
-          end
+        # <Space>cf - Show completion
+        keymap(:normal, "<Space>cf") do |ctx|
+          handle_lsp_completion(ctx)
+          true
         end
 
-        # \c - Show completion
-        keymap(:normal, "c") do |ctx|
-          if @leader_pending
-            @leader_pending = false
-            handle_lsp_completion(ctx)
-            true
-          else
-            false # Let default 'c' handle it
-          end
-        end
-
-        # \e - Show diagnostic at cursor
-        keymap(:normal, "e") do |ctx|
-          if @leader_pending
-            @leader_pending = false
-            handle_lsp_diagnostic_show(ctx)
-            true
-          else
-            false # Let default 'e' handle it
-          end
-        end
-
-        # Cancel leader pending on any other key (via Escape)
-        keymap(:normal, "\e") do |_ctx|
-          if @leader_pending
-            @leader_pending = false
-            true
-          else
-            false
-          end
+        # <Space>ef - Show diagnostic at cursor
+        keymap(:normal, "<Space>ef") do |ctx|
+          handle_lsp_diagnostic_show(ctx)
+          true
         end
 
         # Insert mode: Ctrl+Space - Trigger LSP completion
