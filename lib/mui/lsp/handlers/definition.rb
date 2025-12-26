@@ -79,7 +79,7 @@ module Mui
           window.cursor_col = character
           window.ensure_cursor_visible
 
-          # @editor.message = "#{File.basename(file_path)}:#{line + 1}"
+          @editor.message = "#{File.basename(file_path)}:#{line + 1}"
         end
 
         def show_location_list(locations)
