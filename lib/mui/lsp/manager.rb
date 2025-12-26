@@ -86,6 +86,20 @@ module Mui
         nil
       end
 
+      def client_for_capability(file_path, capability)
+        @mutex.synchronize do
+          @server_configs.each do |name, config|
+            next unless config.handles_file?(file_path)
+            next unless @clients[name]&.running?
+
+            # Check if server supports the capability
+            capabilities = @clients[name].server_capabilities
+            return @clients[name] if capabilities[capability]
+          end
+        end
+        nil
+      end
+
       def text_sync_for(file_path)
         @mutex.synchronize do
           @server_configs.each do |name, config|
@@ -215,32 +229,102 @@ module Mui
       end
 
       def definition(file_path:, line:, character:)
-        client = client_for(file_path)
-        unless client
+        text_syncs = text_syncs_for(file_path)
+        if text_syncs.empty?
           @editor.message = server_unavailable_message(file_path)
           return
         end
 
         uri = TextDocumentSync.path_to_uri(file_path)
-        handler = Handlers::Definition.new(editor: @editor, client: client)
+        handler = Handlers::Definition.new(editor: @editor, client: text_syncs.first.client)
 
-        client.definition(uri: uri, line: line, character: character) do |result, error|
-          handler.handle(result, error)
+        # Collect results from all clients
+        results_mutex = Mutex.new
+        pending_count = text_syncs.size
+        all_results = []
+
+        text_syncs.each do |text_sync|
+          text_sync.client.definition(uri: uri, line: line, character: character) do |result, _error|
+            results_mutex.synchronize do
+              all_results << result if result
+              pending_count -= 1
+
+              if pending_count.zero?
+                merged = merge_locations(all_results)
+                handler.handle(merged, nil)
+              end
+            end
+          end
+        end
+      end
+
+      def type_definition(file_path:, line:, character:)
+        # Only send to servers that support typeDefinitionProvider
+        text_syncs = text_syncs_for(file_path).select do |ts|
+          ts.client.server_capabilities["typeDefinitionProvider"]
+        end
+
+        if text_syncs.empty?
+          # Fallback message: check if any server is running but doesn't support typeDefinition
+          any_text_sync = text_syncs_for(file_path).first
+          @editor.message = if any_text_sync
+                              "LSP: no server supports typeDefinition for this file"
+                            else
+                              server_unavailable_message(file_path)
+                            end
+          return
+        end
+
+        uri = TextDocumentSync.path_to_uri(file_path)
+        handler = Handlers::TypeDefinition.new(editor: @editor, client: text_syncs.first.client)
+
+        # Collect results from all clients
+        results_mutex = Mutex.new
+        pending_count = text_syncs.size
+        all_results = []
+
+        text_syncs.each do |text_sync|
+          text_sync.client.type_definition(uri: uri, line: line, character: character) do |result, _error|
+            results_mutex.synchronize do
+              all_results << result if result
+              pending_count -= 1
+
+              if pending_count.zero?
+                merged = merge_locations(all_results)
+                handler.handle(merged, nil)
+              end
+            end
+          end
         end
       end
 
       def references(file_path:, line:, character:)
-        client = client_for(file_path)
-        unless client
+        text_syncs = text_syncs_for(file_path)
+        if text_syncs.empty?
           @editor.message = server_unavailable_message(file_path)
           return
         end
 
         uri = TextDocumentSync.path_to_uri(file_path)
-        handler = Handlers::References.new(editor: @editor, client: client)
+        handler = Handlers::References.new(editor: @editor, client: text_syncs.first.client)
 
-        client.references(uri: uri, line: line, character: character) do |result, error|
-          handler.handle(result, error)
+        # Collect results from all clients
+        results_mutex = Mutex.new
+        pending_count = text_syncs.size
+        all_results = []
+
+        text_syncs.each do |text_sync|
+          text_sync.client.references(uri: uri, line: line, character: character) do |result, _error|
+            results_mutex.synchronize do
+              all_results << result if result
+              pending_count -= 1
+
+              if pending_count.zero?
+                merged = merge_locations(all_results)
+                handler.handle(merged, nil)
+              end
+            end
+          end
         end
       end
 
@@ -273,6 +357,41 @@ module Mui
           handler.handle(result, error)
         end
       end
+
+      def jump_to_type_file(file_path:, line: nil, character: nil)
+        # For Ruby/RBS files, use custom toggle behavior
+        if file_path&.end_with?(".rb", ".rbs")
+          jump_to_ruby_type_file(file_path)
+        else
+          # For other languages, use LSP typeDefinition
+          type_definition(file_path: file_path, line: line, character: character)
+        end
+      end
+
+      private
+
+      def jump_to_ruby_type_file(file_path)
+        target_path = if file_path.end_with?(".rb")
+                        find_rbs_file(file_path)
+                      else
+                        find_ruby_file(file_path)
+                      end
+
+        unless target_path
+          ext = File.extname(file_path)
+          target_ext = ext == ".rb" ? ".rbs" : ".rb"
+          @editor.message = "No #{target_ext} file found for #{File.basename(file_path)}"
+          return
+        end
+
+        # Open the target file
+        new_buffer = Mui::Buffer.new
+        new_buffer.load(target_path)
+        @editor.window.buffer = new_buffer
+        @editor.message = "Opened #{File.basename(target_path)}"
+      end
+
+      public
 
       def running_servers
         @mutex.synchronize do
@@ -307,6 +426,80 @@ module Mui
       end
 
       private
+
+      def merge_locations(results)
+        # Flatten all results into a single array
+        merged = results.flat_map do |result|
+          case result
+          when Array then result
+          when Hash then [result]
+          else []
+          end
+        end
+
+        # Remove duplicates based on uri and range
+        merged.uniq do |loc|
+          uri = loc["uri"] || loc["targetUri"]
+          range = loc["range"] || loc["targetSelectionRange"]
+          [uri, range]
+        end
+      end
+
+      def find_rbs_file(ruby_file_path)
+        # Find project root
+        project_root = find_project_root(ruby_file_path)
+
+        # Get relative path from project root
+        abs_path = File.expand_path(ruby_file_path)
+        rel_path = abs_path.sub("#{project_root}/", "")
+
+        # Try different RBS path patterns
+        candidates = []
+
+        # Pattern 1: sig/relative_path.rbs (e.g., lib/mui/config.rb -> sig/lib/mui/config.rbs)
+        candidates << File.join(project_root, "sig", rel_path.sub(/\.rb$/, ".rbs"))
+
+        # Pattern 2: sig/without_lib.rbs (e.g., lib/mui/config.rb -> sig/mui/config.rbs)
+        if rel_path.start_with?("lib/")
+          candidates << File.join(project_root, "sig", rel_path.sub(%r{^lib/}, "").sub(/\.rb$/, ".rbs"))
+        end
+
+        # Pattern 3: sig/basename.rbs (e.g., lib/mui/config.rb -> sig/config.rbs)
+        candidates << File.join(project_root, "sig", "#{File.basename(ruby_file_path, ".rb")}.rbs")
+
+        # Return first existing file
+        candidates.find { |path| File.exist?(path) }
+      end
+
+      def find_ruby_file(rbs_file_path)
+        # Find project root
+        project_root = find_project_root(rbs_file_path)
+
+        # Get relative path from project root
+        abs_path = File.expand_path(rbs_file_path)
+        rel_path = abs_path.sub("#{project_root}/", "")
+
+        # Remove sig/ prefix if present
+        rel_path = rel_path.sub(%r{^sig/}, "")
+
+        # Try different Ruby path patterns
+        candidates = []
+
+        # Pattern 1: lib/relative_path.rb (e.g., sig/mui/config.rbs -> lib/mui/config.rb)
+        candidates << File.join(project_root, "lib", rel_path.sub(/\.rbs$/, ".rb"))
+
+        # Pattern 2: relative_path.rb without lib (e.g., sig/lib/mui/config.rbs -> lib/mui/config.rb)
+        candidates << File.join(project_root, rel_path.sub(/\.rbs$/, ".rb")) if rel_path.start_with?("lib/")
+
+        # Pattern 3: Search in lib directory for basename
+        basename = File.basename(rbs_file_path, ".rbs")
+        Dir.glob(File.join(project_root, "lib", "**", "#{basename}.rb")).each do |path|
+          candidates << path
+        end
+
+        # Return first existing file
+        candidates.find { |path| File.exist?(path) }
+      end
 
       def send_pending_documents(server_name)
         text_sync = @mutex.synchronize { @text_syncs[server_name] }

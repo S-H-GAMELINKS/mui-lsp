@@ -6,6 +6,7 @@ LSP (Language Server Protocol) plugin for [Mui](https://github.com/S-H-GAMELINKS
 
 - **Hover**: Show documentation for symbol under cursor (`K` or `<Space>hf` or `:LspHover`)
 - **Go to Definition**: Jump to symbol definition (`<Space>df` or `:LspDefinition`)
+- **Go to Type Definition**: Jump to type definition or toggle between Ruby/RBS files (`<Space>tf` or `:LspTypeDefinition`)
 - **Find References**: Show all references to symbol (`<Space>rf` or `:LspReferences`)
 - **Completion**: Get code completion suggestions (`<Space>cf` or `:LspCompletion`)
 - **Format**: Format current file with LSP server (`<Space>ff` or `:LspFormat`)
@@ -19,6 +20,8 @@ Pre-configured servers for Ruby:
 - **ruby-lsp** - Shopify's Ruby language server
 - **Kanayago** - Realtime Ruby Syntax Check server
 - **RuboCop** (LSP mode) - Ruby linter with LSP support
+- **TypeProf** - Ruby type analysis and inference
+- **Steep** - Ruby type checker with RBS support
 
 Custom servers can be configured for other languages.
 
@@ -60,6 +63,42 @@ Available pre-configured servers:
 - `:ruby_lsp` - ruby-lsp (Shopify's Ruby LSP)
 - `:rubocop` - RuboCop in LSP mode
 - `:kanayago` - Kanayago (Japanese Ruby LSP)
+- `:typeprof` - TypeProf (Ruby type analysis)
+- `:steep` - Steep (Ruby type checker with RBS)
+
+### TypeProf Setup
+
+TypeProf requires a configuration file in your project root. Run:
+
+```bash
+typeprof --init
+```
+
+This creates `typeprof.conf.jsonc` with default settings:
+
+```jsonc
+{
+  "typeprof_version": "experimental",
+  "rbs_dir": "sig/",
+  "analysis_unit_dirs": ["lib"]
+}
+```
+
+TypeProf will only analyze files in the directories specified in `analysis_unit_dirs`. Without this configuration file, TypeProf will not track documents and type definition features will not work.
+
+### Steep Setup
+
+Steep requires a `Steepfile` in your project root. Create one with:
+
+```ruby
+# Steepfile
+target :lib do
+  signature "sig"
+  check "lib"
+end
+```
+
+Place your RBS type definitions in the `sig/` directory.
 
 ### Custom Server Configuration
 
@@ -127,6 +166,7 @@ To manually start a server:
 | `:LspStatus` | Show running and registered servers |
 | `:LspHover` | Show hover information |
 | `:LspDefinition` | Go to definition |
+| `:LspTypeDefinition` | Go to type definition |
 | `:LspReferences` | Find all references |
 | `:LspCompletion` | Show completion menu |
 | `:LspDiagnostics` | Show diagnostics for current file |
@@ -142,6 +182,7 @@ To manually start a server:
 |-----|------|-------------|
 | `K` | Normal | Show hover information (in floating window) |
 | `<Space>df` | Normal | Go to definition |
+| `<Space>tf` | Normal | Go to type definition (Ruby: toggle .rb/.rbs) |
 | `<Space>rf` | Normal | Find references |
 | `<Space>hf` | Normal | Show hover information (alternative to K) |
 | `<Space>cf` | Normal | Show completion |
@@ -174,6 +215,7 @@ mui-lsp/
       base.rb          # Base handler class
       hover.rb         # Hover response handler
       definition.rb    # Definition response handler
+      type_definition.rb # Type definition response handler
       references.rb    # References response handler
       diagnostics.rb   # Diagnostics notification handler
       completion.rb    # Completion response handler
