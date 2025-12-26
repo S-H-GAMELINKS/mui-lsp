@@ -8,6 +8,8 @@ module Mui
     class TextDocumentSync
       DEFAULT_DEBOUNCE_MS = 300
 
+      attr_reader :client
+
       def initialize(client:, server_config:, debounce_ms: DEFAULT_DEBOUNCE_MS)
         @client = client
         @server_config = server_config

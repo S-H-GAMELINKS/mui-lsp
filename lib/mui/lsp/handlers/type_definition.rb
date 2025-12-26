@@ -3,8 +3,8 @@
 module Mui
   module Lsp
     module Handlers
-      # Handler for textDocument/definition responses
-      class Definition < Base
+      # Handler for textDocument/typeDefinition responses
+      class TypeDefinition < Base
         protected
 
         def handle_result(result)
@@ -19,7 +19,7 @@ module Mui
         end
 
         def handle_empty
-          @editor.message = "No definition found"
+          @editor.message = "No type definition found"
         end
 
         private
@@ -79,13 +79,13 @@ module Mui
           window.cursor_col = character
           window.ensure_cursor_visible
 
-          # @editor.message = "#{File.basename(file_path)}:#{line + 1}"
+          @editor.message = "#{File.basename(file_path)}:#{line + 1}"
         end
 
         def show_location_list(locations)
           # Store locations for picker navigation
           @editor.instance_variable_set(:@lsp_picker_locations, locations)
-          @editor.instance_variable_set(:@lsp_picker_type, :definition)
+          @editor.instance_variable_set(:@lsp_picker_type, :type_definition)
 
           # Build picker content
           lines = []
@@ -97,7 +97,7 @@ module Mui
           end
 
           # Open scratch buffer for picker
-          content = "Definitions (\\Enter:open, Ctrl+t:tab, \\q:close)\n\n#{lines.join("\n")}"
+          content = "Type Definitions (\\Enter:open, Ctrl+t:tab, \\q:close)\n\n#{lines.join("\n")}"
           @editor.open_scratch_buffer("[LSP Picker]", content)
         end
       end

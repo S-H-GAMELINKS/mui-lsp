@@ -26,6 +26,8 @@ module Mui
         case ext
         when ".rb", ".rake", ".gemspec", ".ru"
           "ruby"
+        when ".rbs"
+          "rbs"
         when ".js"
           "javascript"
         when ".ts"
@@ -95,6 +97,26 @@ module Mui
             command: "rubocop --lsp",
             language_ids: ["ruby"],
             file_patterns: ["**/*.rb", "**/*.rake", "**/Gemfile", "**/Rakefile", "**/*.gemspec"],
+            auto_start: auto_start
+          )
+        end
+
+        def typeprof(auto_start: false)
+          new(
+            name: "typeprof",
+            command: "typeprof --lsp --stdio",
+            language_ids: ["ruby"],
+            file_patterns: ["**/*.rb", "**/*.rake", "**/Gemfile", "**/Rakefile", "**/*.gemspec"],
+            auto_start: auto_start
+          )
+        end
+
+        def steep(auto_start: false)
+          new(
+            name: "steep",
+            command: "steep langserver",
+            language_ids: %w[ruby rbs],
+            file_patterns: ["**/*.rb", "**/*.rbs", "**/*.rake", "**/Gemfile", "**/Rakefile", "**/*.gemspec"],
             auto_start: auto_start
           )
         end

@@ -1,6 +1,27 @@
 ## [Unreleased]
 
 ### Added
+- Multiple LSP result merging:
+  - Definition, References, and Type Definition now query all matching LSP servers
+  - Results from all servers are merged and deduplicated
+  - Enables showing both Ruby source and RBS type definitions together
+- Steep pre-configured server:
+  - `use :steep` in `Mui.lsp` block to enable
+  - Requires `Steepfile` in project root
+  - Supports `.rb` and `.rbs` files
+- Ruby/RBS file toggle (`<Space>tf`):
+  - In Ruby files: jumps to corresponding RBS file in `sig/` directory
+  - In RBS files: jumps to corresponding Ruby file in `lib/` directory
+  - Searches multiple path patterns (e.g., `lib/mui/config.rb` → `sig/mui/config.rbs`)
+  - For non-Ruby files: uses LSP `textDocument/typeDefinition` as before
+- Type definition support (`textDocument/typeDefinition`):
+  - `:LspTypeDefinition` command to jump to type definition
+  - `<Space>tf` keymap for type definition
+  - Works with TypeProf, Sorbet, Steep and other Ruby type checkers
+  - Uses same picker UI as Definition when multiple candidates found
+- TypeProf pre-configured server:
+  - `use :typeprof` in `Mui.lsp` block to enable
+  - Requires `typeprof.conf.jsonc` in project root (run `typeprof --init` to create)
 - Format support (`textDocument/formatting`):
   - `:LspFormat` command to format current file
   - `<Space>ff` keymap for formatting
@@ -11,6 +32,11 @@
   - `\` + `Enter` - Open selected location in current window
   - `Ctrl+t` - Open selected location in new tab
   - `\q` / `\` + `Esc` - Close picker
+
+### Fixed
+- Type definition now checks `typeDefinitionProvider` capability before sending requests
+  - Prevents sending requests to servers that don't support type definition (e.g., Solargraph)
+  - Shows helpful message when no server supports type definition
 
 ### Changed
 - Keymaps changed from leader key (`\`) to `<Space>` prefix:

@@ -104,6 +104,13 @@ module Mui
                 }, &callback)
       end
 
+      def type_definition(uri:, line:, character:, &callback)
+        request("textDocument/typeDefinition", {
+                  textDocument: { uri: uri },
+                  position: { line: line, character: character }
+                }, &callback)
+      end
+
       def references(uri:, line:, character:, include_declaration: true, &callback)
         request("textDocument/references", {
                   textDocument: { uri: uri },
@@ -278,6 +285,9 @@ module Mui
               }
             },
             definition: {
+              linkSupport: false
+            },
+            typeDefinition: {
               linkSupport: false
             },
             references: {},

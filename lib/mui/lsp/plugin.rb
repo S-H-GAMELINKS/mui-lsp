@@ -44,6 +44,11 @@ module Mui
           handle_lsp_definition(ctx)
         end
 
+        # :LspTypeDefinition - Go to type definition
+        command(:LspTypeDefinition) do |ctx, _args|
+          handle_lsp_type_definition(ctx)
+        end
+
         # :LspReferences - Show references
         command(:LspReferences) do |ctx, _args|
           handle_lsp_references(ctx)
@@ -95,6 +100,12 @@ module Mui
         # <Space>df - Go to definition
         keymap(:normal, "<Space>df") do |ctx|
           handle_lsp_definition(ctx)
+          true
+        end
+
+        # <Space>tf - Go to type definition (toggle between .rb and .rbs)
+        keymap(:normal, "<Space>tf") do |ctx|
+          handle_lsp_jump_to_type_file(ctx)
           true
         end
 
@@ -283,6 +294,18 @@ module Mui
         line = ctx.window.cursor_row
         character = ctx.window.cursor_col
         get_manager(ctx.editor).definition(file_path: file_path, line: line, character: character)
+      end
+
+      def handle_lsp_jump_to_type_file(ctx)
+        file_path = ctx.buffer.file_path
+        unless file_path
+          ctx.set_message("LSP: no file path")
+          return
+        end
+
+        line = ctx.window.cursor_row
+        character = ctx.window.cursor_col
+        get_manager(ctx.editor).jump_to_type_file(file_path: file_path, line: line, character: character)
       end
 
       def handle_lsp_references(ctx)
@@ -496,8 +519,10 @@ module Mui
                    ServerConfig.rubocop_lsp(auto_start: true)
                  when :kanayago
                    ServerConfig.kanayago(auto_start: true)
+                 when :steep
+                   ServerConfig.steep(auto_start: true)
                  else
-                   raise ArgumentError, "Unknown server: #{name}. Use :solargraph, :ruby_lsp, :rubocop, or :kanayago"
+                   raise ArgumentError, "Unknown server: #{name}. Use :solargraph, :ruby_lsp, :rubocop, :kanayago, or :steep"
                  end
         register_server(config)
       end
@@ -608,8 +633,13 @@ module Mui
                    ServerConfig.rubocop_lsp(auto_start: true)
                  when :kanayago
                    ServerConfig.kanayago(auto_start: true)
+                 when :typeprof
+                   ServerConfig.typeprof(auto_start: true)
+                 when :steep
+                   ServerConfig.steep(auto_start: true)
                  else
-                   raise ArgumentError, "Unknown server: #{name}. Use :solargraph, :ruby_lsp, :rubocop, or :kanayago"
+                   raise ArgumentError,
+                         "Unknown server: #{name}. Use :solargraph, :ruby_lsp, :rubocop, :kanayago, :typeprof, or :steep"
                  end
         @server_configs << config
       end

@@ -34,6 +34,25 @@ class TestServerConfig < Minitest::Test
     assert_equal "rubocop --lsp", config.command
   end
 
+  def test_typeprof_config
+    config = Mui::Lsp::ServerConfig.typeprof
+
+    assert_equal "typeprof", config.name
+    assert_equal "typeprof --lsp --stdio", config.command
+    assert_includes config.language_ids, "ruby"
+  end
+
+  def test_steep_config
+    config = Mui::Lsp::ServerConfig.steep
+
+    assert_equal "steep", config.name
+    assert_equal "steep langserver", config.command
+    assert_includes config.language_ids, "ruby"
+    assert_includes config.language_ids, "rbs"
+    assert config.handles_file?("lib/foo.rb")
+    assert config.handles_file?("sig/foo.rbs")
+  end
+
   def test_handles_file
     config = Mui::Lsp::ServerConfig.solargraph
 
@@ -49,6 +68,7 @@ class TestServerConfig < Minitest::Test
 
     assert_equal "ruby", config.language_id_for("test.rb")
     assert_equal "ruby", config.language_id_for("Rakefile.rake")
+    assert_equal "rbs", config.language_id_for("types.rbs")
     assert_equal "javascript", config.language_id_for("index.js")
     assert_equal "python", config.language_id_for("main.py")
   end
