@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.3.0] - 2025-12-26 
+
 ### Added
 - Multiple LSP result merging:
   - Definition, References, and Type Definition now query all matching LSP servers
